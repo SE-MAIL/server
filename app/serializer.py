@@ -11,4 +11,4 @@ class ShowerlogSerializer(ModelSerializer):
 class ShowerdatasetSerializer(ModelSerializer):
     class Meta:
         model = Showerdataset
-        fields = ('idshowerdataset', 'gender', 'age', 'averageemissions', 'count')
+        fields = ('idshowerdataset', 'gender', 'age', 'averageemissions')

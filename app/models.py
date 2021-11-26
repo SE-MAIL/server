@@ -4,7 +4,7 @@ from django.db import models
 class Currentshowerdata(models.Model):
     idcurrentshowerdata = models.IntegerField(db_column='idcurrentShowerData', primary_key=True)  # Field name made lowercase.
     targettime = models.IntegerField(db_column='targetTime', blank=True, null=True)  # Field name made lowercase.
-    showercount = models.IntegerField(db_column='showerCount', blank=True, null=True)  # Field name made lowercase.
+    reduction = models.IntegerField(db_column='reduction', blank=True, null=True)  # Field name made lowercase.
     user = models.ForeignKey('User', models.DO_NOTHING)
 
     class Meta:
@@ -17,7 +17,7 @@ class Showerdataset(models.Model):
     gender = models.IntegerField(blank=True, null=True)
     age = models.CharField(max_length=45, blank=True, null=True)
     averageemissions = models.IntegerField(db_column='averageEmissions', blank=True, null=True)  # Field name made lowercase.
-    count = models.IntegerField(blank=True, null=True)
+
 
     class Meta:
         managed = False
