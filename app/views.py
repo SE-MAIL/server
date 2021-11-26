@@ -23,7 +23,7 @@ class ShowerdatasetEmissionAPIView(APIView):
         serializer = ShowerdatasetSerializer(Showerdataset)
         return Response(serializer.data)
 
-class CurrentShowerEmissionAPIView(APIView):
+class PersonalShowerEmissionAPIView(APIView):
     def get_object(self, pk):
         return get_object_or_404(Personalshowerdata, user_id=pk)
 
