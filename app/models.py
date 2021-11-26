@@ -9,7 +9,7 @@ class Personalshowerdata(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'PersonalShowerData'
+        db_table = 'Personalshowerdata'
 
 
 class Showerdataset(models.Model):
