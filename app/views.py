@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Currentshowerdata, Showerdataset, User
+from .models import Personalshowerdata, Showerdataset, User
 from .models import Showerlog
 from .serializer import ShowerdatasetSerializer
 from .serializer import ShowerlogSerializer
@@ -25,16 +25,16 @@ class ShowerdatasetEmissionAPIView(APIView):
 
 class CurrentShowerEmissionAPIView(APIView):
     def get_object(self, pk):
-        return get_object_or_404(Currentshowerdata, user_id=pk)
+        return get_object_or_404(Personalshowerdata, user_id=pk)
 
     def get(self, request, pk, format=None): # 이번 월 1일 ~ 현재까지 내 배출량 합
-        currentShowerData = self.get_object(pk) 
-        serializer = ShowerdatasetSerializer(currentShowerData)
+        output = self.get_object(pk) 
+        serializer = ShowerdatasetSerializer(output)
         return Response(serializer.data)
     
     def put(self, request, pk):
-        Showerlog = self.get_object(pk)
-        serializer = ShowerlogSerializer(Showerlog, data=request.data)
+        output = self.get_object(pk)
+        serializer = ShowerlogSerializer(output, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

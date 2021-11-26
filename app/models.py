@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Currentshowerdata(models.Model):
+class Personalshowerdata(models.Model):
     idcurrentshowerdata = models.IntegerField(db_column='idcurrentShowerData', primary_key=True)  # Field name made lowercase.
     targettime = models.IntegerField(db_column='targetTime', blank=True, null=True)  # Field name made lowercase.
     reduction = models.IntegerField(db_column='reduction', blank=True, null=True)  # Field name made lowercase.
@@ -9,7 +9,7 @@ class Currentshowerdata(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'currentShowerData'
+        db_table = 'PersonalShowerData'
 
 
 class Showerdataset(models.Model):
@@ -32,6 +32,7 @@ class Showerlog(models.Model):
     date = models.DateTimeField(blank=True, null=True)
     user = models.ForeignKey('User', models.DO_NOTHING)
     emissions = models.IntegerField(blank=True, null=True)
+
 
     class Meta:
         managed = False
