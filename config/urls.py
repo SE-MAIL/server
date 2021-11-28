@@ -6,6 +6,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('recommended/shower/personaldata/<pk>/', views.PersonalShowerEmissionAPIView.as_view()),
     path('recommended/shower/dataset/<pk>/', views.ShowerdatasetEmissionAPIView.as_view()),
-    path('action/shower/<id>', views.ActionShowerAPIView.as_view()),
+    path('action/shower/', views.ActionShowerAPIView.as_view()),
 
 ]

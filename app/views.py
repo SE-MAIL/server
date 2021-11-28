@@ -42,9 +42,12 @@ class PersonalShowerEmissionAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ActionShowerAPIView(APIView):
-    def get(self, request, id, format=None): # 시작, 끝시간 체크
+    def get(self, request, format=None): # 시작, 끝시간 체크
         time = datetime.timezone
-        logging.warn('시간은', time)
-        logging.warn('요청은', request)
-        return 1
+        logging.warn('시간은')
+        logging.warn(time)
+        # logging.warn('요청은', request)
+        # output = self.get_object(id) 
+        # serializer = ShowerdatasetSerializer(output)
+        return Response(1)
         
