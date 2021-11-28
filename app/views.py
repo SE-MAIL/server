@@ -5,6 +5,7 @@ from .models import Personalshowerdata, Showerdataset, User
 from .models import Showerlog
 from .serializer import ShowerdatasetSerializer
 from .serializer import ShowerlogSerializer
+import datetime
 import logging
 
 # Create your views here.
@@ -39,3 +40,11 @@ class PersonalShowerEmissionAPIView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ActionShowerAPIView(APIView):
+    def get(self, request, id, format=None): # 시작, 끝시간 체크
+        time = datetime.timezone
+        logging.warn('시간은', time)
+        logging.warn('요청은', request)
+        return 1
+        
