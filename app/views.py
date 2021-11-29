@@ -7,6 +7,7 @@ from .serializer import ShowerdatasetSerializer
 from .serializer import ShowerlogSerializer
 import datetime
 import logging
+import json
 
 # Create your views here.
 
@@ -41,23 +42,33 @@ class PersonalShowerEmissionAPIView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ActionShowerAPIView(APIView):
+class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
     def get(self, request, format=None): # 시작, 끝시간 체크
         time = datetime.timezone
         logging.warn('시간은')
         logging.warn(time)
-        # logging.warn('요청은', request)
-        # output = self.get_object(id) 
-        # serializer = ShowerdatasetSerializer(output)
         return Response(1)
 
     def post(self, request, format=None): # 시작, 끝시간 체크
         time = datetime.timezone
         logging.warn('시간은')
-        logging.warn(time)
-        # logging.warn('요청은', request)
-        # output = self.get_object(id) 
-        # serializer = ShowerdatasetSerializer(output)
-        return Response(3)
+        logging.warn(request.data)
+        response = {
+            "version": "2.0",
+            "resultCode": "OK",
+            "output": {
+                "shower": "샤워",
+                "time" : "시작",
+            }
+        }
+        return Response(json.dumps(response))
 
-        
+# def sumMonthlyEmission():
+    
+
+# # class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
+# #     # 여기서 showerlog table의 endTime 기록 후 sum 처리
+
+
+
+
