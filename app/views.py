@@ -50,4 +50,14 @@ class ActionShowerAPIView(APIView):
         # output = self.get_object(id) 
         # serializer = ShowerdatasetSerializer(output)
         return Response(1)
+
+    def post(self, request, format=None): # 시작, 끝시간 체크
+        time = datetime.timezone
+        logging.warn('시간은')
+        logging.warn(time)
+        # logging.warn('요청은', request)
+        # output = self.get_object(id) 
+        # serializer = ShowerdatasetSerializer(output)
+        return Response(3)
+
         
