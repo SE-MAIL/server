@@ -63,12 +63,21 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
         }
         return Response(json.dumps(response))
 
-# def sumMonthlyEmission():
     
+class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
+# 여기서 showerlog table의 endTime 기록 후 sum 처리
+    def sumMonthlyEmission(self):
+        latestLog = Showerlog.objects.fileter(id=id).last()
+        startTime = latestLog.startTime
+        endTime = latestLog.endTime
+        emission = latestLog.emissions
 
-# # class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
-# #     # 여기서 showerlog table의 endTime 기록 후 sum 처리
+        if startTime[0:6] != endTime[0:6] :
+            latestLog.sum == 0
+        latestLog.sum += emission
 
+        return latestLog.save()
 
-
-
+    
+        
+        

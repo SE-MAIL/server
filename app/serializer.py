@@ -6,7 +6,7 @@ from .models import Showerlog
 class ShowerlogSerializer(ModelSerializer):
     class Meta:
         model = Showerlog
-        fields = ('idshower', 'starttime', 'endtime', 'takentime', 'date', 'user_id', 'emissions') #'__all__'
+        fields = ('idshower', 'starttime', 'endtime', 'takentime', 'user_id', 'emissions', 'sum') #'__all__'
 
 class ShowerdatasetSerializer(ModelSerializer):
     class Meta:
