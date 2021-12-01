@@ -1,15 +1,38 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.models import User
+from django.contrib import auth
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Personalshowerdata, Showerdataset, User
-from .models import Showerlog
-from .serializer import ShowerdatasetSerializer
-from .serializer import ShowerlogSerializer
-import datetime
-import logging
-import json
-
+from .models import Personalshowerdata, Showerdataset, User, Showerlog
+from .serializer import ShowerdatasetSerializer, ShowerlogSerializer
+import datetime, logging, json
 # Create your views here.
+
+class UserAPIView(APIView):
+    def signup(request): # 회원 가입
+        if request.method == 'POST': #signup 으로 POST 요청이 왔을 때, 새로운 유저를 만드는 절차를 밟는다.
+            if request.POST['password'] == request.POST['confirm']: # password와 confirm에 입력된 값이 같다면
+                user = User.objects.create_user(userID=request.POST['userID'], pw=request.POST['password'], name=request.POST['name'], age=request.POST['age'], gender=request.POST['gender']) # user 객체를 새로 생성
+            elif request.POST['userID']: # 회원 가입 때 id가 입력된다면 : 가구원 등록
+                user = User.objects.create_user(userID=request.POST['userID'], pw=request.POST['password'], name=request.POST['name'], age=request.POST['age'], gender=request.POST['gender']) # user 객체를 새로 생성
+            auth.login(request, user) # 로그인 한다
+            return redirect('/')
+        return render(request, 'signup.html')  # signup으로 GET 요청이 왔을 때, 회원가입 화면을 띄워준다.
+
+    def login(request): # 로그인
+        if request.method == 'POST': # login으로 POST 요청이 들어왔을 때, 로그인 절차를 밟는다.
+            userID = request.POST['userID'] # login.html에서 넘어온 username과 
+            password = request.POST['password'] # password를 각 변수에 저장한다.
+
+            user = auth.authenticate(request, userID=userID, password=password)  # 해당 username과 password와 일치하는 user 객체를 가져온다.
+        
+            if user is not None: # 해당 user 객체가 존재한다면
+                auth.login(request, user) # 로그인 한다
+                return redirect('/')
+            else: # 존재하지 않는다면
+                return render(request, 'login.html', {'error' : 'id or password is incorrect.'})  # 딕셔너리에 에러메세지를 전달하고 다시 login.html 화면으로 돌아간다.
+        else:  # login으로 GET 요청이 들어왔을때, 로그인 화면을 띄워준다.
+            return render(request, 'login.html')
 
 class ShowerdatasetEmissionAPIView(APIView):
     def get_user(self, pk):
