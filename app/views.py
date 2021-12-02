@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Personalshowerdata, Showerdataset, User, Showerlog
 from .serializer import ShowerdatasetSerializer, ShowerlogSerializer
-import datetime, logging, json
+import datetime, logging
+from django.http import JsonResponse
 # Create your views here.
 
 class UserAPIView(APIView):
@@ -68,14 +69,10 @@ class PersonalShowerEmissionAPIView(APIView):
 class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
     def get(self, request, format=None): # 시작, 끝시간 체크
         time = datetime.timezone
-        logging.warn('시간은')
-        logging.warn(time)
         return Response(1)
 
     def post(self, request, format=None): # 시작, 끝시간 체크
         time = datetime.timezone
-        logging.warn('시간은')
-        logging.warn(request.data)
         response = {
             "version": "2.0",
             "resultCode": "OK",
@@ -84,7 +81,7 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                 "time" : "시작",
             }
         }
-        return Response(json.dumps(response))
+        return JsonResponse(response)
 
     
 class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결

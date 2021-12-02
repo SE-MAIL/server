@@ -13,6 +13,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('recommended/shower/personaldata/<pk>/', views.PersonalShowerEmissionAPIView.as_view()),
     path('recommended/shower/dataset/<pk>/', views.ShowerdatasetEmissionAPIView.as_view()),
-    path('answer.shower', views.ActionShowerStartAPIView.as_view()),
+    path('answer.showerStart', views.ActionShowerStartAPIView.as_view()),
     path('user/signup/', views.UserAPIView.as_view()),
 ]
