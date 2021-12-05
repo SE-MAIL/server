@@ -1,6 +1,11 @@
 from django.contrib import admin
 from django.urls import path
 from app import views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 
 # 누구는 http://www.~~~.com/answer.shower  이 주소로 요청을 보냈는데
     # 장고에서는 /answer.shower 에 해당하는 주소가 없어서 마음대로 /를 붙여준겨!
@@ -14,5 +19,8 @@ urlpatterns = [
     path('recommended/shower/personaldata/<pk>/', views.PersonalShowerEmissionAPIView.as_view()),
     path('recommended/shower/dataset/<pk>/', views.ShowerdatasetEmissionAPIView.as_view()),
     path('answer.showerStart', views.ActionShowerStartAPIView.as_view()),
-    path('user/signup/', views.UserAPIView.as_view()),
+    path('user/signup', views.SignupAPIView.as_view()),
+    path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('test', views.TestAPIView.as_view()),
 ]

@@ -1,51 +1,60 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.models import User
-from django.contrib import auth
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Personalshowerdata, Showerdataset, User, Showerlog
+from .models import AuthUser, Family, Personalshowerdata, Showerdataset, Showerlog, Userinfo
 from .serializer import ShowerdatasetSerializer, ShowerlogSerializer
 import datetime, logging
 from django.http import JsonResponse
+from app import models
+import random
+from rest_framework.permissions import IsAuthenticated
+import jwt
+from rest_framework import status
+from config.settings import SIMPLE_JWT
+
+
 # Create your views here.
 
-class UserAPIView(APIView):
-    def signup(request): # 회원 가입
-        if request.method == 'POST': #signup 으로 POST 요청이 왔을 때, 새로운 유저를 만드는 절차를 밟는다.
-            if request.POST['password'] == request.POST['confirm']: # password와 confirm에 입력된 값이 같다면
-                user = User.objects.create_user(userID=request.POST['userID'], pw=request.POST['password'], name=request.POST['name'], age=request.POST['age'], gender=request.POST['gender']) # user 객체를 새로 생성
-            elif request.POST['userID']: # 회원 가입 때 id가 입력된다면 : 가구원 등록
-                user = User.objects.create_user(userID=request.POST['userID'], pw=request.POST['password'], name=request.POST['name'], age=request.POST['age'], gender=request.POST['gender']) # user 객체를 새로 생성
-            auth.login(request, user) # 로그인 한다
-            return redirect('/')
-        return render(request, 'signup.html')  # signup으로 GET 요청이 왔을 때, 회원가입 화면을 띄워준다.
+class SignupAPIView(APIView):
+    def generateFID(self):
+        id = random.randint(1, 999)
+        return id
 
-    def login(request): # 로그인
-        if request.method == 'POST': # login으로 POST 요청이 들어왔을 때, 로그인 절차를 밟는다.
-            userID = request.POST['userID'] # login.html에서 넘어온 username과 
-            password = request.POST['password'] # password를 각 변수에 저장한다.
-
-            user = auth.authenticate(request, userID=userID, password=password)  # 해당 username과 password와 일치하는 user 객체를 가져온다.
-        
-            if user is not None: # 해당 user 객체가 존재한다면
-                auth.login(request, user) # 로그인 한다
-                return redirect('/')
-            else: # 존재하지 않는다면
-                return render(request, 'login.html', {'error' : 'id or password is incorrect.'})  # 딕셔너리에 에러메세지를 전달하고 다시 login.html 화면으로 돌아간다.
-        else:  # login으로 GET 요청이 들어왔을때, 로그인 화면을 띄워준다.
-            return render(request, 'login.html')
+    def post(self, request):
+        if not(request.data['id'] and request.data['pw'] and
+         request.data['name'] and str(request.data['gender']) and
+         request.data['age'] and str(request.data['isNew']) and request.data['familyID']):
+            return JsonResponse({'message': 'KEY_ERROR'}, status=400)
+        try:
+            id = int(request.data['familyID'])
+            if request.data['isNew']:
+                id = int(self.generateFID())
+                family = Family.objects.create(idfamily=id, familycap=request.data['familyCap'])
+                family.save()
+            family = Family.objects.get(idfamily=id)
+            user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], family_idfamily=family, first_name=request.data['name'])
+            userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
+            user.save()
+            userInfo.save()
+            return Response({"result": "OK"})
+        except:
+            return Response({"result": "FAIL"})
 
 class ShowerdatasetEmissionAPIView(APIView):
     def get_user(self, pk):
-        return get_object_or_404(User, id=pk)
+        return get_object_or_404(AuthUser, username=pk)
 
     def get_dataSet(self, pk): # 해당 성별, 나이대 그룹의 한달 평균 배출량
         return get_object_or_404(Showerdataset, age=pk)
 
+    def get_userInfo(self, pk):
+            return get_object_or_404(Userinfo, auth_user_id=pk)
+
     def get(self, request, pk, format=None):
         user = self.get_user(pk)
-        logging.warn(user.age)
-        Showerdataset = self.get_dataSet(user.age)
+        userInfo = self.get_userInfo(user.id)
+        logging.warn(userInfo.age)
+        Showerdataset = self.get_dataSet(userInfo.age)
         serializer = ShowerdatasetSerializer(Showerdataset)
         return Response(serializer.data)
 
@@ -98,6 +107,14 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
 
         return latestLog.save()
 
-    
+
+class TestAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        Bearer, jwt_token = token.split(" ")
+        decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
+
+        return Response(decoded)
         
         
