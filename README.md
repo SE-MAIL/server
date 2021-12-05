@@ -1,10 +1,13 @@
 # One Minute
-저희 서비스 'One Minute'의 서버 코드입니다.
+저희 서비스 'Sinabro'의 서버 코드입니다.
 # 기술스택
 - Django 3.2.9
 - Django REST framework 
 - pymysql
+- simple jwt
+- pyjwt
 # 실행 방법
+
 # 폴더 구조
 ```
 ├── README.md
