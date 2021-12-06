@@ -11,8 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 import jwt
 from rest_framework import status
 from config.settings import SIMPLE_JWT
-
-
+import datetime
 # Create your views here.
 
 class SignupAPIView(APIView):
@@ -76,21 +75,31 @@ class PersonalShowerEmissionAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
-    def get(self, request, format=None): # 시작, 끝시간 체크
-        time = datetime.timezone
-        return Response(1)
+    def getUser(self, first_name):
+        return get_object_or_404(AuthUser, first_name=first_name)
 
     def post(self, request, format=None): # 시작, 끝시간 체크
-        time = datetime.timezone
-        response = {
-            "version": "2.0",
-            "resultCode": "OK",
-            "output": {
-                "shower": "샤워",
-                "time" : "시작",
+        try:
+            starttime = datetime.datetime.now()+datetime.timedelta(hours=9)
+            first_name = request.data['action']['parameters']['user']['value']
+            user = self.getUser(first_name)
+            showerlog = models.Showerlog(auth_user=user, starttime=starttime)
+            showerlog.save()
+
+            response = {
+                "version": "2.0",
+                "resultCode": "OK",
+                "output": {
+                    "user": "{first_name}",
+                }
             }
-        }
-        return JsonResponse(response)
+            return JsonResponse(response)
+        except:
+            return JsonResponse({
+                "version": "2.0",
+                "resultCode": "error",
+                }
+            )
 
     
 class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
