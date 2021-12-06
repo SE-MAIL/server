@@ -82,8 +82,8 @@ class Showerlog(models.Model):
     starttime = models.DateTimeField(db_column='startTime', blank=True, null=True)  # Field name made lowercase.
     endtime = models.DateTimeField(db_column='endTime', blank=True, null=True)  # Field name made lowercase.
     takentime = models.IntegerField(db_column='takenTime', blank=True, null=True)  # Field name made lowercase.
-    emissions = models.IntegerField(blank=True, null=True)
-    sum = models.IntegerField(blank=True, null=True)
+    emissions = models.IntegerField(default=0)
+    sum = models.IntegerField(default=0)
     auth_user = models.ForeignKey(AuthUser, models.DO_NOTHING)
 
     class Meta:

@@ -12,6 +12,7 @@ import jwt
 from rest_framework import status
 from config.settings import SIMPLE_JWT
 import datetime
+from django.utils import timezone
 # Create your views here.
 
 class SignupAPIView(APIView):
@@ -80,10 +81,11 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
 
     def post(self, request, format=None): # 시작, 끝시간 체크
         try:
-            starttime = datetime.datetime.now()+datetime.timedelta(hours=9)
+            starttime = timezone.now()+datetime.timedelta(hours=9)
             first_name = request.data['action']['parameters']['user']['value']
             user = self.getUser(first_name)
-            showerlog = models.Showerlog(auth_user=user, starttime=starttime)
+            latestLog = Showerlog.objects.filter(auth_user=user).last()
+            showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLog.sum)
             showerlog.save()
 
             response = {
@@ -104,17 +106,47 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
     
 class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
 # 여기서 showerlog table의 endTime 기록 후 sum 처리
-    def sumMonthlyEmission(self):
-        latestLog = Showerlog.objects.fileter(id=id).last()
-        startTime = latestLog.startTime
-        endTime = latestLog.endTime
-        emission = latestLog.emissions
+    def getUser(self, first_name):
+        return get_object_or_404(AuthUser, first_name=first_name)
 
-        if startTime[0:6] != endTime[0:6] :
-            latestLog.sum == 0
-        latestLog.sum += emission
+    def post(self, request, format=None):
+        try:
+            endTime = timezone.now()+datetime.timedelta(hours=9)
+            first_name = request.data['action']['parameters']['user']['value']
+            user = self.getUser(first_name)
 
-        return latestLog.save()
+            showerLogList = Showerlog.objects.all().filter(auth_user=user)
+            latestLog = showerLogList.last()
+            logging.warn(latestLog)
+            beforeLastestLog = showerLogList.order_by('-idshower')[1]
+            logging.warn(beforeLastestLog)
+
+            startTime = latestLog.starttime
+            takenTime = (endTime - startTime).total_seconds()
+            latestLog.takentime = takenTime
+            emissions = takenTime*2
+            latestLog.emissions = emissions
+            if str(beforeLastestLog.starttime)[0:7] != str(endTime)[0:7] :
+                logging.warn(str(beforeLastestLog.starttime)[0:7])
+                logging.warn(str(endTime)[0:7])
+                latestLog.sum == 0
+            latestLog.sum = latestLog.sum + emissions
+            latestLog.endtime=endTime
+            latestLog.save()
+            response = {
+                    "version": "2.0",
+                    "resultCode": "OK",
+                    "output": {
+                        "user": "{first_name}",
+                    }
+                }
+            return JsonResponse(response)
+        except:
+            return JsonResponse({
+                "version": "2.0",
+                "resultCode": "error",
+                }
+            )
 
 
 class TestAPIView(APIView):

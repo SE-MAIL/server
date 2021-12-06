@@ -19,6 +19,8 @@ urlpatterns = [
     path('recommended/shower/personaldata/<pk>/', views.PersonalShowerEmissionAPIView.as_view()),
     path('recommended/shower/dataset/<pk>/', views.ShowerdatasetEmissionAPIView.as_view()),
     path('answer.showerStart', views.ActionShowerStartAPIView.as_view()),
+    path('answer.showerEnd', views.ActionShowerEndAPIView.as_view()),
+
     path('user/signup', views.SignupAPIView.as_view()),
     path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
