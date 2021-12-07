@@ -16,8 +16,15 @@ from django.utils import timezone
 # Create your views here.
 
 class SignupAPIView(APIView):
+    # 가입할 때 받는 값들
+    # id pw name gender age - 기본 유저 데이터
+    # isNew - 새로운 가구를 만들면 1, 기존 가구에 참여는 0
+    # familyID - 새로운 가구 생성시 임의의 양의 정수 넣어서 보냄, 기존 가구 참여시 해당 가구 ID, familyID는 1부터 999까지 양의 정수
+    # familyCap - 새로운 가구 생성시 해당 가구원 수, 기존가구 참여시 임의의 양의 정수.
+
     def generateFID(self):
         id = random.randint(1, 999)
+        # 랜덤인트 돌렸을 때 이미 있는 값인지.
         return id
 
     def post(self, request):
@@ -80,28 +87,33 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
         return get_object_or_404(AuthUser, first_name=first_name) # AuthUser가 User 테이블, first_name은 사용자의 이름
 
     def post(self, request, format=None): # 시작, 끝시간 체크
-        try:
+        # try:
             starttime = timezone.now()+datetime.timedelta(hours=9)
             first_name = request.data['action']['parameters']['user']['value'] # 누구의 요청에서 사용자의 이름 받기
             user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기
             latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
             showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLog.sum) # sum은 직전 값을 불러옴.
+            personalData = Personalshowerdata.objects.get(auth_user = user)
+            targetMinute = int(personalData.targettime / 60)
+            targetSecond = int(personalData.targettime % 60)
             showerlog.save()
 
             response = {
                 "version": "2.0",
                 "resultCode": "OK",
                 "output": {
-                    "user": "{first_name}",
+                    "user": f"{first_name}",
+                    "target_minute" : f"{targetMinute}",
+                    "target_second" : f"{targetSecond}",
                 }
             }
             return JsonResponse(response)
-        except:
-            return JsonResponse({
-                "version": "2.0",
-                "resultCode": "error",
-                }
-            )
+        # except:
+        #     return JsonResponse({
+        #         "version": "2.0",
+        #         "resultCode": "error",
+        #         }
+        #     )
 
     
 class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
@@ -110,13 +122,15 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
         return get_object_or_404(AuthUser, first_name=first_name)
 
     def post(self, request, format=None):
-        try:
+        # try:
             endTime = timezone.now()+datetime.timedelta(hours=9) # 요청 들어왔을 때 시간 기록
             first_name = request.data['action']['parameters']['user']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
             user = self.getUser(first_name) # 샤워시작과 동일
 
+            personalData = Personalshowerdata.objects.get(auth_user = user)
             showerLogList = Showerlog.objects.all().filter(auth_user=user) # 유저 데이터로 샤워로그 기록 조회. 해당 유저의 샤워로그 전체를 불러옴.
             latestLog = showerLogList.last() # 해당 유저의 전체 로그 중 마지막
+            firstLog = showerLogList.first()
             beforeLastestLog = showerLogList.order_by('-idshower')[1] # 해당 유저의 전체 로그 중 마지막에서 두번째 값.
             # order_by('조건')에서 조건 앞에 -를 붙이면 역순으로 정렬함(내림차순). -> [0]번이 가장 마지막 값(==last()) [1]이 마지막에서 두 번째 값.
 
@@ -125,28 +139,41 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
             # total_seconds()는 datetime type을 초 단위로 변환해줌.
             latestLog.takentime = takenTime # 가장 마지막 로그에 소요시간 저장
             emissions = takenTime*2 # 샤워 10분당 1080g의 탄소배출 -> 1초당 약 1.8g 배출 => 약 2g배출로 계산.
-            
+
             latestLog.emissions = emissions # 배출량 저장.
             if str(beforeLastestLog.starttime)[0:7] != str(endTime)[0:7] : # 마지막에서 두번째값의 일자와 현재 일자를 비교
                 # latestLog(가장 마지막 row)는 현재 샤워를 시작했을 때 기록된 row다. 따라서 이전 샤워 데이터를 불러오려면 마지막에서 두 번째 값을 불러와야 함.
                 latestLog.sum == 0
             latestLog.sum = latestLog.sum + emissions
             latestLog.endtime=endTime
+            is_success = 'success'
+            if takenTime > personalData.targettime:
+                is_success = 'fail'
+            reductionTime = int(personalData.targettime - takenTime)
+            if reductionTime < 0:
+                reductionTime = 0
+            reduction_carbon = int((firstLog.takentime - takenTime) * 2)
+            emission_carbon = int(emissions)
             latestLog.save()
             response = {
                     "version": "2.0",
                     "resultCode": "OK",
                     "output": {
-                        "user": "{first_name}",
+                        "showerEndUser": f"{first_name}",
+                        "is_success": f"{is_success}",
+                        "emission_carbon": f"{emission_carbon}",
+                        "reduction_time": f"{reductionTime}",
+                        "reduction_carbon": f"{reduction_carbon}"
+
                     }
                 }
             return JsonResponse(response)
-        except:
-            return JsonResponse({
-                "version": "2.0",
-                "resultCode": "error",
-                }
-            )
+        # except:
+        #     return JsonResponse({
+        #         "version": "2.0",
+        #         "resultCode": "error",
+        #         }
+        #     )
 
 
 class TestAPIView(APIView): # 로그인 기능 토큰 확인용 테스트 뷰

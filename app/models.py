@@ -49,7 +49,6 @@ class AuthUser(AbstractBaseUser):
     is_staff = models.IntegerField()
     is_active = models.IntegerField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    family_idfamily = models.ForeignKey(Family, models.DO_NOTHING, db_column='Family_idFamily')  # Field name made lowercase.
     USERNAME_FIELD = "username"
     class Meta:
         managed = False
@@ -68,7 +67,7 @@ class Showerdataset(models.Model):
         db_table = 'showerDataSet'
         
 class Personalshowerdata(models.Model):
-    idcurrentshowerdata = models.AutoField(db_column='idcurrentShowerData', primary_key=True)  # Field name made lowercase.
+    id = models.AutoField(db_column='id', primary_key=True)  # Field name made lowercase.
     targettime = models.IntegerField(db_column='targetTime', blank=True, null=True)  # Field name made lowercase.
     reduction = models.IntegerField(blank=True, null=True)
     auth_user = models.ForeignKey('AuthUser', models.DO_NOTHING)
