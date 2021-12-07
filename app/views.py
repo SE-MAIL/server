@@ -89,7 +89,7 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
     def post(self, request, format=None): # 시작, 끝시간 체크
         # try:
             starttime = timezone.now()+datetime.timedelta(hours=9)
-            first_name = request.data['action']['parameters']['user']['value'] # 누구의 요청에서 사용자의 이름 받기
+            first_name = request.data['action']['parameters']['showerStartUser']['value'] # 누구의 요청에서 사용자의 이름 받기
             user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기
             latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
             showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLog.sum) # sum은 직전 값을 불러옴.
@@ -124,7 +124,7 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
     def post(self, request, format=None):
         # try:
             endTime = timezone.now()+datetime.timedelta(hours=9) # 요청 들어왔을 때 시간 기록
-            first_name = request.data['action']['parameters']['user']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
+            first_name = request.data['action']['parameters']['showerEndUser']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
             user = self.getUser(first_name) # 샤워시작과 동일
 
             personalData = Personalshowerdata.objects.get(auth_user = user)
