@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import User
-from .models import Showerdataset
-from .models import Showerlog
-from .models import Personalshowerdata
+from .models import AuthUser, Family, Showerdataset, Showerlog, Personalshowerdata, Userinfo
 # Register your models here.
-admin.site.register(User)
+admin.site.register(AuthUser)
 admin.site.register(Showerdataset)
 admin.site.register(Showerlog)
 admin.site.register(Personalshowerdata)
+admin.site.register(Userinfo)
+admin.site.register(Family)
+
