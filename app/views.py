@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import AuthUser, Family, Personalshowerdata, Showerdataset, Showerlog, Userinfo
-from .serializer import ShowerdatasetSerializer, ShowerlogSerializer
+from .serializer import PersonalShowerlogSerializer, ShowerdatasetSerializer, ShowerlogSerializer
 import datetime, logging
 from django.http import JsonResponse
 from app import models
@@ -41,17 +41,6 @@ class SignupAPIView(APIView):
             family = Family.objects.get(idfamily=id)
             user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], family_idfamily=family, first_name=request.data['name'])
             userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
-            if request.data['age'] <= 15:
-                userInfo.age == 0
-            elif request.data['age'] > 15 and request.data['age'] <= 24:
-                userInfo.age == 1
-            elif request.data['age'] > 25 and request.data['age'] <= 34:
-                userInfo.age == 2
-            elif request.data['age'] > 35 and request.data['age'] <= 54:
-                userInfo.age == 3
-            else:
-                userInfo.age == 4
-                
             user.save()
             userInfo.save()
             return Response({"result": "OK"})
@@ -77,28 +66,27 @@ class ShowerdatasetEmissionAPIView(APIView):
         return Response(serializer.data)
 
 class PersonalShowerEmissionAPIView(APIView):
-    def get_object(self, pk):
-        return get_object_or_404(Personalshowerdata, user_id=pk)
+    def getUser(self, id):
+        return get_object_or_404(AuthUser, id=id)
 
     def get(self, request, pk, format=None): # 이번 월 1일 ~ 현재까지 내 배출량 합
-        output = self.get_object(pk) 
-        serializer = ShowerdatasetSerializer(output)
+        token = request.META.get('HTTP_AUTHORIZATION')
+        Bearer, jwt_token = token.split(" ")
+        decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
+
+        user_id = decoded.user_id
+        user = self.getUser(user_id)
+        serializer = PersonalShowerlogSerializer(user)
         return Response(serializer.data)
-    
-    def put(self, request, pk):
-        output = self.get_object(pk)
-        serializer = ShowerlogSerializer(output, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
     def getUser(self, first_name):
         return get_object_or_404(AuthUser, first_name=first_name) # AuthUser가 User 테이블, first_name은 사용자의 이름
 
     def post(self, request, format=None): # 시작, 끝시간 체크
-        # try:
+        try:
+            
             starttime = timezone.now()+datetime.timedelta(hours=9)
             first_name = request.data['action']['parameters']['showerStartUser']['value'] # 누구의 요청에서 사용자의 이름 받기
             user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기
@@ -119,12 +107,12 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                 }
             }
             return JsonResponse(response)
-        # except:
-        #     return JsonResponse({
-        #         "version": "2.0",
-        #         "resultCode": "error",
-        #         }
-        #     )
+        except:
+            return JsonResponse({
+                "version": "2.0",
+                "resultCode": "error",
+                }
+            )
 
     
 class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
@@ -133,7 +121,7 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
         return get_object_or_404(AuthUser, first_name=first_name)
 
     def post(self, request, format=None):
-        # try:
+        try:
             endTime = timezone.now()+datetime.timedelta(hours=9) # 요청 들어왔을 때 시간 기록
             first_name = request.data['action']['parameters']['showerEndUser']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
             user = self.getUser(first_name) # 샤워시작과 동일
@@ -179,12 +167,12 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
                     }
                 }
             return JsonResponse(response)
-        # except:
-        #     return JsonResponse({
-        #         "version": "2.0",
-        #         "resultCode": "error",
-        #         }
-        #     )
+        except:
+            return JsonResponse({
+                "version": "2.0",
+                "resultCode": "error",
+                }
+            )
 
 
 class TestAPIView(APIView): # 로그인 기능 토큰 확인용 테스트 뷰
@@ -196,4 +184,4 @@ class TestAPIView(APIView): # 로그인 기능 토큰 확인용 테스트 뷰
 
         return Response(decoded)
         
-        
+class 
