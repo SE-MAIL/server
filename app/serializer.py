@@ -3,7 +3,7 @@ from rest_framework.serializers import ModelSerializer
 from .models import Personalshowerdata, Showerdataset
 from .models import Showerlog
 
-class PersonalShowerlogSerializer(ModelSerializer):
+class PersonalShowerdataSerializer(ModelSerializer):
     class Meta:
         model = Personalshowerdata
         fields = ('__all__') #'__all__'
@@ -11,4 +11,9 @@ class PersonalShowerlogSerializer(ModelSerializer):
 class ShowerdatasetSerializer(ModelSerializer):
     class Meta:
         model = Showerdataset
-        fields = ('idshowerdataset', 'gender', 'age', 'averageemissions')
+        fields = ('__all__')
+
+class showerLogSumSerializer(ModelSerializer):
+    class Meta:
+        model = Showerlog
+        fields = ('__all__')

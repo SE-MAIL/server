@@ -2,17 +2,18 @@ from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import AuthUser, Family, Personalshowerdata, Showerdataset, Showerlog, Userinfo
-from .serializer import PersonalShowerlogSerializer, ShowerdatasetSerializer, ShowerlogSerializer
+from .serializer import PersonalShowerdataSerializer, PersonalShowerdataSerializer, ShowerdatasetSerializer, showerLogSumSerializer
 import datetime, logging
 from django.http import JsonResponse
 from app import models
 import random
 from rest_framework.permissions import IsAuthenticated
 import jwt
-from rest_framework import status
 from config.settings import SIMPLE_JWT
 import datetime
 from django.utils import timezone
+
+from app import serializer
 # Create your views here.
 
 class SignupAPIView(APIView):
@@ -65,18 +66,21 @@ class ShowerdatasetEmissionAPIView(APIView):
         serializer = ShowerdatasetSerializer(Showerdataset)
         return Response(serializer.data)
 
-class PersonalShowerEmissionAPIView(APIView):
+class PersonalShowerDataAPIView(APIView):
     def getUser(self, id):
         return get_object_or_404(AuthUser, id=id)
 
     def get(self, request, format=None): # 이번 월 1일 ~ 현재까지 내 배출량 합
         token = request.META.get('HTTP_AUTHORIZATION')
+        logging.warn(token)
         Bearer, jwt_token = token.split(" ")
         decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
+        logging.warn(decoded)
+        user_id = decoded['user_id']
 
-        user_id = decoded.user_id
         user = self.getUser(user_id)
-        serializer = PersonalShowerlogSerializer(user)
+        result = Personalshowerdata.objects.get(auth_user = user)
+        serializer = PersonalShowerdataSerializer(result)
         return Response(serializer.data)
 
 
@@ -184,17 +188,23 @@ class TestAPIView(APIView): # 로그인 기능 토큰 확인용 테스트 뷰
 
         return Response(decoded)
         
-class ShoerLogSumAPIView(APIView):
-    def getUser(self, first_name):
-        return get_object_or_404(AuthUser, first_name=first_name)
+class ShowerLogSumAPIView(APIView):
+    def getUser(self, id):
+        return get_object_or_404(AuthUser, id=id)
+
     def get(self, request, format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
+        logging.warn('========================')
         Bearer, jwt_token = token.split(" ")
+        logging.warn('========================')
         decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
-        user_id = decoded.user_id
+        logging.warn('========================')
+        user_id = decoded['user_id']
+        logging.warn('========================')
         user = self.getUser(user_id)
+        logging.warn('========================')
         latestLog = Showerlog.objects.filter(auth_user=user).last() 
-        sum = latestLog.sum
-        JsonResponse({'sum': sum})
+        serializer = showerLogSumSerializer(latestLog)
+        return Response(serializer.data)
 
 
