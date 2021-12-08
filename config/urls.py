@@ -16,8 +16,9 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('recommended/shower/personaldata/', views.PersonalShowerEmissionAPIView.as_view()),
-    path('recommended/shower/dataset/', views.ShowerdatasetEmissionAPIView.as_view()),
+    path('personaldata/me', views.PersonalShowerDataAPIView.as_view()),
+    path('dataset/me', views.ShowerdatasetEmissionAPIView.as_view()),
+    path('emissions/me', views.ShowerLogSumAPIView.as_view()),
     path('answer.showerStart', views.ActionShowerStartAPIView.as_view()),
     path('answer.showerEnd', views.ActionShowerEndAPIView.as_view()),
 
