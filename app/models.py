@@ -59,7 +59,7 @@ class Showerdataset(models.Model):
     idshowerdataset = models.IntegerField(db_column='idshowerDataSet', primary_key=True)  # Field name made lowercase.
     gender = models.IntegerField(blank=True, null=True)
     age = models.CharField(max_length=45, blank=True, null=True)
-    averageemissions = models.IntegerField(db_column='averageEmissions', blank=True, null=True)  # Field name made lowercase.
+    averagereduction = models.IntegerField(db_column='averageReduction', blank=True, null=True)  # Field name made lowercase.
 
 
     class Meta:
