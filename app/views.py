@@ -69,7 +69,7 @@ class PersonalShowerEmissionAPIView(APIView):
     def getUser(self, id):
         return get_object_or_404(AuthUser, id=id)
 
-    def get(self, request, pk, format=None): # 이번 월 1일 ~ 현재까지 내 배출량 합
+    def get(self, request, format=None): # 이번 월 1일 ~ 현재까지 내 배출량 합
         token = request.META.get('HTTP_AUTHORIZATION')
         Bearer, jwt_token = token.split(" ")
         decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
@@ -184,3 +184,17 @@ class TestAPIView(APIView): # 로그인 기능 토큰 확인용 테스트 뷰
 
         return Response(decoded)
         
+class ShoerLogSumAPIView(APIView):
+    def getUser(self, first_name):
+        return get_object_or_404(AuthUser, first_name=first_name)
+    def get(self, request, format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        Bearer, jwt_token = token.split(" ")
+        decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
+        user_id = decoded.user_id
+        user = self.getUser(user_id)
+        latestLog = Showerlog.objects.filter(auth_user=user).last() 
+        sum = latestLog.sum
+        JsonResponse({'sum': sum})
+
+
