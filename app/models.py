@@ -92,7 +92,7 @@ class Showerlog(models.Model):
 class Userinfo(models.Model):
     auth_user = models.OneToOneField('AuthUser', models.DO_NOTHING, primary_key=True)
     gender = models.IntegerField(blank=True, null=True)
-    age = models.CharField(max_length=45, blank=True, null=True)
+    age = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False

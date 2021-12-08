@@ -41,6 +41,17 @@ class SignupAPIView(APIView):
             family = Family.objects.get(idfamily=id)
             user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], family_idfamily=family, first_name=request.data['name'])
             userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
+            if request.data['age'] <= 15:
+                userInfo.age == 0
+            elif request.data['age'] > 15 and request.data['age'] <= 24:
+                userInfo.age == 1
+            elif request.data['age'] > 25 and request.data['age'] <= 34:
+                userInfo.age == 2
+            elif request.data['age'] > 35 and request.data['age'] <= 54:
+                userInfo.age == 3
+            else:
+                userInfo.age == 4
+                
             user.save()
             userInfo.save()
             return Response({"result": "OK"})
