@@ -39,6 +39,7 @@ class UserManager(BaseUserManager):
         return self.create_user(username, password, **extra_fields)
 class AuthUser(AbstractBaseUser):
     objects = UserManager()
+    id = models.IntegerField(primary_key=True)
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.IntegerField()
