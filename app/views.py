@@ -20,33 +20,26 @@ class SignupAPIView(APIView):
     # 가입할 때 받는 값들
     # id pw name gender age - 기본 유저 데이터
     # isNew - 새로운 가구를 만들면 1, 기존 가구에 참여는 0
-    # familyID - 새로운 가구 생성시 임의의 양의 정수 넣어서 보냄, 기존 가구 참여시 해당 가구 ID, familyID는 1부터 999까지 양의 정수
+    # familyID - 새로운 가구 생성시
     # familyCap - 새로운 가구 생성시 해당 가구원 수, 기존가구 참여시 임의의 양의 정수.
-
-    def generateFID(self):
-        id = random.randint(1, 999)
-        # 랜덤인트 돌렸을 때 이미 있는 값인지.
-        return id
 
     def post(self, request):
         if not(request.data['id'] and request.data['pw'] and
          request.data['name'] and str(request.data['gender']) and
          request.data['age'] and str(request.data['isNew']) and request.data['familyID']):
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
-        try:
-            id = int(request.data['familyID'])
-            if request.data['isNew']:
-                id = int(self.generateFID())
-                family = Family.objects.create(idfamily=id, familycap=request.data['familyCap'])
-                family.save()
-            family = Family.objects.get(idfamily=id)
-            user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], family_idfamily=family, first_name=request.data['name'])
-            userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
-            user.save()
-            userInfo.save()
-            return Response({"result": "OK"})
-        except:
-            return Response({"result": "FAIL"})
+        #try:
+        if request.data['isNew']:
+            family = Family.objects.create(familyid=request.data['id'], familycap=request.data['familyCap'])
+            family.save()
+        family = Family.objects.get(familyid=request.data['id'])
+        user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], familyid=family, first_name=request.data['name'])
+        userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
+        user.save()
+        userInfo.save()
+        return Response({"result": "OK"})
+        #except:
+            #return Response({"result": "FAIL"})
 
 class ShowerdatasetEmissionAPIView(APIView):
     def get_user(self, pk):
@@ -89,14 +82,27 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
         return get_object_or_404(AuthUser, first_name=first_name) # AuthUser가 User 테이블, first_name은 사용자의 이름
 
     def post(self, request, format=None): # 시작, 끝시간 체크
-        try:
-            
+        
+        #try:
             starttime = timezone.now()+datetime.timedelta(hours=9)
             first_name = request.data['action']['parameters']['showerStartUser']['value'] # 누구의 요청에서 사용자의 이름 받기
             user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기
             latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
-            showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLog.sum) # sum은 직전 값을 불러옴.
-            personalData = Personalshowerdata.objects.get(auth_user = user)
+            showerlog = models.Showerlog(auth_user=user, starttime=starttime) # sum은 직전 값을 불러옴.
+    
+            try : 
+                personalData = Personalshowerdata.objects.get(auth_user = user)
+            except :
+                personalData = None
+
+            if personalData == None:
+
+                dataset = Showerdataset.objects.all().filter(age=Showerdataset.age)
+                dataset = dataset.objects.filter(gender=dataset.gender)
+                dataset = dataset.objects.filter(month=starttime.month)
+
+                personalData.targettime = dataset.objects.filter(targettime=dataset.averageshowertime)
+
             targetMinute = int(personalData.targettime / 60)
             targetSecond = int(personalData.targettime % 60)
             showerlog.save()
@@ -111,13 +117,15 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                 }
             }
             return JsonResponse(response)
-        except:
+            '''
+        except Exception as e:
+            print('예외가 발생했습니다.', e)
             return JsonResponse({
                 "version": "2.0",
                 "resultCode": "error",
                 }
             )
-
+            '''
     
 class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나 샤워 끝났어' 액션을 하나 더 만들어서 여기에 연결
 # 여기서 showerlog table의 endTime 기록 후 sum 처리

@@ -4,7 +4,7 @@ from django.db import models
 # Create your models here
 
 class Family(models.Model):
-    idfamily = models.IntegerField(db_column='idFamily', primary_key=True)  # Field name made lowercase.
+    familyid = models.CharField(db_column='FamilyID',max_length=45, primary_key=True)  # Field name made lowercase.
     familycap = models.CharField(db_column='familyCap', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
@@ -43,13 +43,14 @@ class AuthUser(AbstractBaseUser):
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.IntegerField()
-    username = models.CharField(unique=True, max_length=150)
+    username = models.CharField(max_length=150)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150, blank=True)
     email = models.CharField(max_length=254, blank=True)
     is_staff = models.IntegerField()
     is_active = models.IntegerField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+    familyid = models.ForeignKey('Family', models.DO_NOTHING, db_column='familyid')
     USERNAME_FIELD = "username"
     class Meta:
         managed = False
@@ -59,7 +60,8 @@ class AuthUser(AbstractBaseUser):
 class Showerdataset(models.Model):
     idshowerdataset = models.IntegerField(db_column='idshowerDataSet', primary_key=True)  # Field name made lowercase.
     gender = models.IntegerField(blank=True, null=True)
-    age = models.CharField(max_length=45, blank=True, null=True)
+    age = models.IntegerField(blank=True, null=True)
+    month = models.IntegerField(db_column = 'month', blank=True, null=True)
     averageShowertime = models.IntegerField(db_column='averageShowertime', blank=True, null=True)  # Field name made lowercase.
 
 
