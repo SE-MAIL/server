@@ -184,4 +184,3 @@ class TestAPIView(APIView): # 로그인 기능 토큰 확인용 테스트 뷰
 
         return Response(decoded)
         
-class 
