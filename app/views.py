@@ -28,15 +28,15 @@ class SignupAPIView(APIView):
 
     def post(self, request):
         if not(request.data['id'] and request.data['pw'] and
-         request.data['name'] and str(request.data['gender']) and
-         request.data['age'] and str(request.data['isNew']) and request.data['familyID']):
-            return JsonResponse({'message': 'KEY_ERROR'}, status=400)
+            request.data['name'] and str(request.data['gender']) and
+            request.data['age'] and str(request.data['isNew']) and request.data['familyID']):
+                return JsonResponse({'message': 'KEY_ERROR'}, status=400)
         try:
-            if request.data['isNew']:
+            if int(request.data['isNew']):
                 family = Family.objects.create(familyid=request.data['id'], familycap=request.data['familyCap'])
                 family.save()
             else:
-                family = Family.objects.get(familyid=request.data['id'])
+                family = Family.objects.get(familyid=request.data['familyID'])
             user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], familyid=family, first_name=request.data['name'])
             inputUser = AuthUser.objects.get(username=request.data['id'])
             userInfo = models.Userinfo(auth_user=inputUser, gender=request.data['gender'], age=request.data['age'])
