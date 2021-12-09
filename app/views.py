@@ -14,6 +14,9 @@ import datetime
 from django.utils import timezone
 
 from app import serializer
+import asyncio
+import websockets
+import json
 # Create your views here.
 
 class SignupAPIView(APIView):
@@ -103,7 +106,19 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                 dataset = dataset.objects.filter(month=starttime.month)
 
                 personalData.targettime = dataset.objects.filter(targettime=dataset.averageshowertime)
-
+            logging.warn('my_connect')
+            async def my_connect():
+                async with websockets.connect("ws://ec2-13-125-128-47.ap-northeast-2.compute.amazonaws.com:8000/ws/mirror/lobby/") as websocket:
+                    logging.warn('inside websocket')
+                    data = {
+                        'time': personalData.targettime,
+                        'isOpen': 1,
+                        'response': 0,
+                    }
+                    await websocket.send(json.dumps(data))
+                    logging.warn('connect websocket')
+            asyncio.run(my_connect())
+            logging.warn('after my_coneect')
             targetMinute = int(personalData.targettime / 60)
             targetSecond = int(personalData.targettime % 60)
             showerlog.save()
@@ -117,6 +132,7 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                     "target_second" : f"{targetSecond}",
                 }
             }
+
             return JsonResponse(response)
             '''
         except Exception as e:
