@@ -6,7 +6,7 @@ from django.db import models
 class Family(models.Model):
     familyid = models.CharField(db_column='FamilyID',max_length=45, primary_key=True)  # Field name made lowercase.
     familycap = models.CharField(db_column='familyCap', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    familyemissions = models.IntegerField(default=0)
+    familyemissions = models.IntegerField(db_column='familyemissions', default=0)
 
 
     class Meta:

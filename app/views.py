@@ -110,7 +110,8 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
 
 
             latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
-            showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLog.sum) # sum은 직전 값을 불러옴.
+            latestLogsum = latestLog.sum
+            showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLogsum) # sum은 직전 값을 불러옴.
     
             
             logging.warn('my_connect')
@@ -183,10 +184,12 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
             emissions = takenTime*2 # 샤워 10분당 1080g의 탄소배출 -> 1초당 약 1.8g 배출 => 약 2g배출로 계산.
 
             latestLog.emissions = emissions # 배출량 저장.
+            
             if str(beforeLastestLog.starttime)[0:7] != str(endTime)[0:7] : # 마지막에서 두번째값의 일자와 현재 일자를 비교
                 # latestLog(가장 마지막 row)는 현재 샤워를 시작했을 때 기록된 row다. 따라서 이전 샤워 데이터를 불러오려면 마지막에서 두 번째 값을 불러와야 함.
                 latestLog.sum == 0
-            latestLog.sum = latestLog.sum + emissions
+            latestLogsum = latestLog.sum
+            latestLog.sum = latestLogsum + emissions
             latestLog.endtime=endTime
             is_success = 'success'
             if takenTime > personalData.targettime:
@@ -197,10 +200,10 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
             reduction_carbon = int((firstLog.takentime - takenTime) * 2)
             emission_carbon = int(emissions)
             logging.warn(is_success)
-            # family = Family.objects.get(familyid=user.familyid)
-            # familyEmissions = family.familyemissions
-            # family.familyemissions = familyEmissions + emissions
-            # family.save()
+            family = Family.objects.get(familyid=user.familyid.familyid)
+            familyEmissions = family.familyemissions
+            family.familyemissions = familyEmissions + emissions
+            family.save()
             latestLog.save()
             response = {
                     "version": "2.0",
@@ -261,13 +264,13 @@ class FamilySumAPIView(APIView):
         user = self.getUser(user_id)
         logging.warn(user.familyid.familyid)
 
-        family = Family.objects.all().filter(familyid=user.familyid.familyid)
+        family = Family.objects.get(familyid=user.familyid.familyid)
         response = familySerializer(family)
         return Response(response.data)
 
 class answerEmissionAPIView(APIView):
     def post(self, request, format=None):
-        first_name = request.data['action']['parameters']['showerEndUser']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
+        first_name = request.data['action']['parameters']['emissionUser']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
         user = self.getUser(first_name) # 샤워시작과 동일
         latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
         sum = latestLog.sum
