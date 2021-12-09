@@ -32,11 +32,12 @@ class SignupAPIView(APIView):
         if request.data['isNew']:
             family = Family.objects.create(familyid=request.data['id'], familycap=request.data['familyCap'])
             family.save()
-        family = Family.objects.get(familyid=request.data['id'])
+        else:
+            family = Family.objects.get(familyid=request.data['id'])
         user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], familyid=family, first_name=request.data['name'])
         userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
-        user.save()
-        userInfo.save()
+        #user.save()
+        #userInfo.save()
         return Response({"result": "OK"})
         #except:
             #return Response({"result": "FAIL"})
