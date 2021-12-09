@@ -24,7 +24,7 @@ class SignupAPIView(APIView):
     # id pw name gender age - 기본 유저 데이터
     # isNew - 새로운 가구를 만들면 1, 기존 가구에 참여는 0
     # familyID - 새로운 가구 생성시
-    # familyCap - 새로운 가구 생성시 해당 가구원 수, 기존가구 참여시 임의의 양의 정수.
+    # familyCap - 새로운 가구 생성시 해당 가구원 수, 기존가구 참여시 임의의 양의 정수
 
     def post(self, request):
         if not(request.data['id'] and request.data['pw'] and
@@ -117,8 +117,7 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                     }
                     await websocket.send(json.dumps(data))
                     logging.warn('connect websocket')
-            loop = asyncio.get_event_loop()
-            result = loop.run_until_complete(my_connect)
+            asyncio.new_event_loop().run_until_complete(my_connect())
             logging.warn('after my_coneect')
             targetMinute = int(personalData.targettime / 60)
             targetSecond = int(personalData.targettime % 60)
