@@ -93,7 +93,6 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
             first_name = request.data['action']['parameters']['showerStartUser']['value'] # 누구의 요청에서 사용자의 이름 받기
             user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기  
 
-
             try : 
                 personalData = Personalshowerdata.objects.get(auth_user = user)
             except :
@@ -200,6 +199,20 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
             reduction_carbon = int((firstLog.takentime - takenTime) * 2)
             emission_carbon = int(emissions)
             logging.warn(is_success)
+
+            async def my_connect():
+                async with websockets.connect("ws://ec2-13-125-128-47.ap-northeast-2.compute.amazonaws.com:8000/ws/mirror/lobby/") as websocket:
+                    logging.warn('inside websocket')
+                    data = {
+                        'time': 0,
+                        'isOpen': 0,
+                        'response': 0,
+                    }
+                    await websocket.send(json.dumps(data))
+                    logging.warn('connect websocket')
+            asyncio.new_event_loop().run_until_complete(my_connect())
+            logging.warn('after my_coneect')
+
             family = Family.objects.get(familyid=user.familyid.familyid)
             familyEmissions = family.familyemissions
             family.familyemissions = familyEmissions + emissions
