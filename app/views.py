@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import AuthUser, Family, Personalshowerdata, Showerdataset, Showerlog, Userinfo
-from .serializer import PersonalShowerdataSerializer, PersonalShowerdataSerializer, ShowerdatasetSerializer, showerLogSumSerializer
+from .serializer import PersonalShowerdataSerializer, PersonalShowerdataSerializer, ShowerdatasetSerializer, familySerializer, showerLogSumSerializer
 import datetime, logging
 from django.http import JsonResponse
 from app import models
@@ -31,19 +31,19 @@ class SignupAPIView(APIView):
          request.data['name'] and str(request.data['gender']) and
          request.data['age'] and str(request.data['isNew']) and request.data['familyID']):
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
-        #try:
-        if request.data['isNew']:
-            family = Family.objects.create(familyid=request.data['id'], familycap=request.data['familyCap'])
-            family.save()
-        else:
-            family = Family.objects.get(familyid=request.data['id'])
-        user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], familyid=family, first_name=request.data['name'])
-        userInfo = models.Userinfo(auth_user=user, gender=request.data['gender'], age=request.data['age'])
-        #user.save()
-        #userInfo.save()
-        return Response({"result": "OK"})
-        #except:
-            #return Response({"result": "FAIL"})
+        try:
+            if request.data['isNew']:
+                family = Family.objects.create(familyid=request.data['id'], familycap=request.data['familyCap'])
+                family.save()
+            else:
+                family = Family.objects.get(familyid=request.data['id'])
+            user = AuthUser.objects.create_user(username=request.data['id'], password=request.data['pw'], familyid=family, first_name=request.data['name'])
+            inputUser = AuthUser.objects.get(username=request.data['id'])
+            userInfo = models.Userinfo(auth_user=inputUser, gender=request.data['gender'], age=request.data['age'])
+            userInfo.save()
+            return Response({"result": "OK"})
+        except:
+            return Response({"result": "FAIL"})
 
 class ShowerdatasetEmissionAPIView(APIView):
     def get_user(self, pk):
@@ -84,16 +84,16 @@ class PersonalShowerDataAPIView(APIView):
 class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
     def getUser(self, first_name):
         return get_object_or_404(AuthUser, first_name=first_name) # AuthUser가 User 테이블, first_name은 사용자의 이름
+    
 
     def post(self, request, format=None): # 시작, 끝시간 체크
         
         #try:
             starttime = timezone.now()+datetime.timedelta(hours=9)
             first_name = request.data['action']['parameters']['showerStartUser']['value'] # 누구의 요청에서 사용자의 이름 받기
-            user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기
-            latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
-            showerlog = models.Showerlog(auth_user=user, starttime=starttime) # sum은 직전 값을 불러옴.
-    
+            user = self.getUser(first_name) # 사용자 이름으로 user 테이블에서 해당 사용자 데이터 불러오기  
+
+
             try : 
                 personalData = Personalshowerdata.objects.get(auth_user = user)
             except :
@@ -102,10 +102,17 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
             if personalData == None:
 
                 dataset = Showerdataset.objects.all().filter(age=Showerdataset.age)
-                dataset = dataset.objects.filter(gender=dataset.gender)
-                dataset = dataset.objects.filter(month=starttime.month)
+                dataset2 = dataset.objects.filter(gender=dataset.gender)
+                dataset3 = dataset2.objects.filter(month=starttime.Month)
 
-                personalData.targettime = dataset.objects.filter(targettime=dataset.averageshowertime)
+                personalData.targettime = dataset3.objects.filter(targettime=dataset.averageshowertime)
+
+
+
+            latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
+            showerlog = models.Showerlog(auth_user=user, starttime=starttime, sum=latestLog.sum) # sum은 직전 값을 불러옴.
+    
+            
             logging.warn('my_connect')
             async def my_connect():
                 async with websockets.connect("ws://ec2-13-125-128-47.ap-northeast-2.compute.amazonaws.com:8000/ws/mirror/lobby/") as websocket:
@@ -119,6 +126,9 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                     logging.warn('connect websocket')
             asyncio.new_event_loop().run_until_complete(my_connect())
             logging.warn('after my_coneect')
+
+
+
             targetMinute = int(personalData.targettime / 60)
             targetSecond = int(personalData.targettime % 60)
             showerlog.save()
@@ -159,7 +169,11 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
             showerLogList = Showerlog.objects.all().filter(auth_user=user) # 유저 데이터로 샤워로그 기록 조회. 해당 유저의 샤워로그 전체를 불러옴.
             latestLog = showerLogList.last() # 해당 유저의 전체 로그 중 마지막
             firstLog = showerLogList.first()
-            beforeLastestLog = showerLogList.order_by('-idshower')[1] # 해당 유저의 전체 로그 중 마지막에서 두번째 값.
+            try:
+                beforeLastestLog = showerLogList.order_by('-idshower')[1] # 해당 유저의 전체 로그 중 마지막에서 두번째 값.
+            except:
+                beforeLastestLog = None
+
             # order_by('조건')에서 조건 앞에 -를 붙이면 역순으로 정렬함(내림차순). -> [0]번이 가장 마지막 값(==last()) [1]이 마지막에서 두 번째 값.
 
             startTime = latestLog.starttime # 가장 마지막 로그에서 시작시간 불러옴.
@@ -182,6 +196,11 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
                 reductionTime = 0
             reduction_carbon = int((firstLog.takentime - takenTime) * 2)
             emission_carbon = int(emissions)
+            logging.warn(is_success)
+            # family = Family.objects.get(familyid=user.familyid)
+            # familyEmissions = family.familyemissions
+            # family.familyemissions = familyEmissions + emissions
+            # family.save()
             latestLog.save()
             response = {
                     "version": "2.0",
@@ -219,17 +238,44 @@ class ShowerLogSumAPIView(APIView):
 
     def get(self, request, format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
-        logging.warn('========================')
         Bearer, jwt_token = token.split(" ")
-        logging.warn('========================')
         decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
-        logging.warn('========================')
         user_id = decoded['user_id']
-        logging.warn('========================')
         user = self.getUser(user_id)
-        logging.warn('========================')
         latestLog = Showerlog.objects.filter(auth_user=user).last() 
         serializer = showerLogSumSerializer(latestLog)
         return Response(serializer.data)
 
 
+class FamilySumAPIView(APIView):
+    def getUser(self, id):
+        return get_object_or_404(AuthUser, id=id)
+
+    def get(self, request, format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        logging.warn(token)
+        Bearer, jwt_token = token.split(" ")
+        decoded = jwt.decode(jwt_token, SIMPLE_JWT['SIGNING_KEY'], algorithms = [SIMPLE_JWT['ALGORITHM']],)
+        logging.warn(decoded)
+        user_id = decoded['user_id']
+        user = self.getUser(user_id)
+        logging.warn(user.familyid.familyid)
+
+        family = Family.objects.all().filter(familyid=user.familyid.familyid)
+        response = familySerializer(family)
+        return Response(response.data)
+
+class answerEmissionAPIView(APIView):
+    def post(self, request, format=None):
+        first_name = request.data['action']['parameters']['showerEndUser']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
+        user = self.getUser(first_name) # 샤워시작과 동일
+        latestLog = Showerlog.objects.filter(auth_user=user).last() # 유저 데이터로 샤워로그 테이블 조회
+        sum = latestLog.sum
+        response = {
+                        "version": "2.0",
+                        "resultCode": "OK",
+                        "output": {
+                            "emission": f"{sum}"
+                        }
+                    }
+        return JsonResponse(response)
