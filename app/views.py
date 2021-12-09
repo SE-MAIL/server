@@ -117,7 +117,8 @@ class ActionShowerStartAPIView(APIView): # 시작할 때 받는거
                     }
                     await websocket.send(json.dumps(data))
                     logging.warn('connect websocket')
-            asyncio.run(my_connect())
+            loop = asyncio.get_event_loop()
+            result = loop.run_until_complete(my_connect)
             logging.warn('after my_coneect')
             targetMinute = int(personalData.targettime / 60)
             targetSecond = int(personalData.targettime % 60)
