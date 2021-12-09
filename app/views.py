@@ -269,6 +269,8 @@ class FamilySumAPIView(APIView):
         return Response(response.data)
 
 class answerEmissionAPIView(APIView):
+    def getUser(self, id):
+        return get_object_or_404(AuthUser, id=id)
     def post(self, request, format=None):
         first_name = request.data['action']['parameters']['emissionUser']['value'] # 샤워시작과 동일 - 유저 데이터 불러오기
         user = self.getUser(first_name) # 샤워시작과 동일
