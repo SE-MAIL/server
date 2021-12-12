@@ -206,7 +206,7 @@ class ActionShowerEndAPIView(APIView): # 끝날 때 받는거, 누구에서 '나
                     data = {
                         'time': 0,
                         'isOpen': 0,
-                        'response': 0,
+                        'response': 1,
                     }
                     await websocket.send(json.dumps(data))
                     logging.warn('connect websocket')
